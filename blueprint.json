@@ -12,11 +12,167 @@
       "version": {
         "major": 0,
         "minor": 0,
-        "level": "alpha",
+        "level": "beta",
         "patch": 0
       }
-    }
+    },
+    "timestamp": "2017-11-20T11:14:46+11:00"
   },
   "software": {
+    "base": {
+      "name": "psql",
+      "accepts": [
+        "ManagedEngine",
+        "ManagedService"
+      ],
+      "publisher_namespace": "EnginesSystem",
+      "type_path": "database/sql/pgsql",
+      "service_handle_field": "database_name",
+      "parent_image": "engines/servicebase",
+      "run_as_user": "postgres",
+      "deployment_type": "worker",
+      "memory": {
+        "required": 256,
+        "recommended": 384
+      },
+      "persistent": true,
+      "attach_post_build": true
+    },
+    "scripts": {
+      "start": {
+        "language": "sh",
+        "content": "#!/bin/sh\r\n\r\n\r\nPID_FILE=/var/run/postgresql/9.5-main.pid\r\nexport PID_FILE\r\n. /home/engines/functions/trap.sh\r\n\r\nservice_first_run_check\r\n\r\nif ! test -f /home/postgres/.pgpass\r\n then\r\n   cp /var/lib/postgresql/.pass /home/postgres/.pgpass\r\n   chmod 600 /home/postgres/.pgpass \r\nfi\r\n\r\n\r\n\r\n/usr/lib/postgresql/9.5/bin/postgres -D /var/lib/postgresql/9.5/main -c config_file=/etc/postgresql/9.5/main/postgresql.conf &\r\necho $! > /var/run/postgresql/9.5-main.pid\r\n\r\nstartup_complete\r\n\r\nwait  \r\nexit_code=$?\r\n\r\nshutdown_complete"
+      }
+    },
+    "constants": [
+      {
+        "name": "backup_support",
+        "value": "true"
+      },
+      {
+        "name": "rails_flavor",
+        "value": "postgres"
+      },
+      {
+        "name": "db_flavor",
+        "value": "pgsql"
+      }
+    ],
+    "target_environment_variables": [
+      {
+        "variable_name": "database_host",
+        "environment_variable_name": "dbhost"
+      },
+      {
+        "variable_name": "database_name",
+        "environment_variable_name": "dbname"
+      },
+      {
+        "variable_name": "dbpassword",
+        "environment_variable_name": "dbpasswd"
+      },
+      {
+        "variable_name": "dbusername",
+        "environment_variable_name": "dbuser"
+      }
+    ],
+    "consumer_params": [
+      {
+        "name": "database_name",
+        "value": "_Engines_Builder(engine_name)",
+        "mandatory": true,
+        "immutable": true,
+        "input": {
+          "type": "string",
+          "label": "Database name"
+        }
+      },
+      {
+        "name": "database_host ",
+        "value": "_Engines_System(pgsql_host)",
+        "mandatory": true,
+        "input": {
+          "type": "string",
+          "label": "Database host"
+        }
+      },
+      {
+        "name": "dbusername",
+        "value": "_Engines_Builder(engine_name)",
+        "mandatory": true,
+        "immutable": true,
+        "input": {
+          "type": "string",
+          "label": "DB User Name"
+        }
+      },
+      {
+        "name": "dbpassword",
+        "value": "_Engines_System(random(10))",
+        "mandatory": true,
+        "input": {
+          "type": "password_with_confirmation",
+          "label": "DB Password"
+        }
+      },
+      {
+        "name": "collation",
+        "value": "C",
+        "mandatory": true,
+        "immutable": true,
+        "input": {
+          "type": "string",
+          "label": "DB Collation"
+        }
+      },
+      {
+        "name": "encoding",
+        "value": "ascii",
+        "mandatory": true,
+        "immutable": true,
+        "input": {
+          "type": "select",
+          "collection": {
+            "items": {
+              "ascii": "ACSII",
+              "utf8": "UTF8"
+            }
+          }
+        }
+      },
+      {
+        "name": "full_access",
+        "value": "fals",
+        "mandatory": true,
+        "input": {
+          "type": "boolean",
+          "label": "Full Database Server Access",
+          "comment": "Access to all databases includes the ability to delete "
+        }
+      }
+    ],
+    "configurators": [
+      {
+        "name": "db_master_pass",
+        "label": "PgSQL Master Password",
+        "description": "PgSQL Master Password for user rma",
+        "enable_logging": true,
+        "no_save": true,
+        "variables": [
+          {
+            "name": "db_master_pass",
+            "mandatory": true,
+            "input": {
+              "type": "password_with_confirmation",
+              "label": "Passwowd user rma"
+            }
+          }
+        ],
+        "set_script": {
+          "language": "sh",
+          "content": "#!/bin/bash\r\n\r\n. /home/engines/functions/params_to_env.sh\r\nparams_to_env\r\n\r\n\r\nrequired_values=\"db_master_pass\"\r\ncheck_required_values  \r\n        \r\nif test -n $db_master_pass\r\n then  \r\n    db_master_pass=`echo $db_master_pass|sed \"/'/s///g\"`\r\n\techo  \"alter user rma with PASSWORD '$db_master_pass';\" | psql postgres postgres          \t\t\t\r\nfi"
+        }
+      }
+    ]
   }
 }
