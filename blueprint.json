@@ -2,8 +2,8 @@
   "schema": {
     "type": "service_blueprint",
     "version": {
-      "major": 1,
-      "minor": 0
+      "major": 0,
+      "minor": 1
     },
     "origin": "Engines Developer Studio 0.2"
   },
@@ -16,25 +16,25 @@
         "patch": 0
       }
     },
-    "timestamp": "2017-11-22T11:32:07+11:00"
+    "timestamp": "2019-09-13T13:27:19+10:00"
   },
   "software": {
     "base": {
       "name": "psql",
-      "accepts": [
-        "ManagedEngine",
-        "ManagedService"
-      ],
       "publisher_namespace": "EnginesSystem",
       "type_path": "database/sql/pgsql",
       "service_handle_field": "database_name",
       "parent_image": "engines/servicebase",
-      "run_as_user": "postgres",
       "deployment_type": "worker",
+      "default_stop_timeout": 0,
+      "restart_attempts": 0,
       "memory": {
         "required": 256,
         "recommended": 384
       },
+      "run_as_user": "postgres"
+    },
+    "disposition": {
       "persistent": true,
       "attach_post_build": true
     },
@@ -76,6 +76,12 @@
         "environment_variable_name": "dbuser"
       }
     ],
+    "consumers": {
+      "accepts": [
+        "ManagedEngine",
+        "ManagedService"
+      ]
+    },
     "consumer_params": [
       {
         "name": "database_name",
@@ -88,7 +94,7 @@
         }
       },
       {
-        "name": "database_host ",
+        "name": "database_host",
         "value": "_Engines_System(pgsql_host)",
         "mandatory": true,
         "input": {
